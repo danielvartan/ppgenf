@@ -30,7 +30,7 @@ A @tbl-grades apresenta as notas atribuídas ao projeto de pesquisa da Alícia n
 Resultado preliminar da avaliação da análise do projeto de pesquisa de Alícia Rafaelly Vilefort Sales
 :::
 
-Segundo comunicado pela comissão do processo seletivo, a avaliação dos projetos ocorreu de forma cega, i.e., sem a identificação dos candidatatos.
+Segundo comunicado pela comissão do processo seletivo, a avaliação dos projetos ocorreu de forma cega, _i.e._, sem a identificação dos candidatatos.
 
 ## Problema, pergunta e hipótese
 
@@ -49,7 +49,7 @@ $$
 
 ## Método
 
-O método de abordagem se encontra alinhado ao método hipotético-dedutivo proposto por @popper1979. O método de procedimento utilizado para avaliar a hipótese básica será o estatístico.
+O método de abordagem se encontra alinhado ao método hipotético-dedutivo proposto por @popper1979. O método de procedimento utilizado para avaliar a hipótese será o estatístico.
 
 Considerando o número reduzido de dados, o uso de um teste paramétrico de independência não seria estatisticamente válido. Por essa razão, propõe-se aqui a utilização de uma simulação de [Monte Carlo](https://pt.wikipedia.org/wiki/Método_de_Monte_Carlo). Este método fundamenta-se em amostragens aleatórias para a obtenção de resultados [@stevens2023], e sua lógica será detalhadamente explicada nas seções a seguir.
 
@@ -62,7 +62,7 @@ Considerando o número reduzido de dados, o uso de um teste paramétrico de inde
  0    0,1   0,2   0,3   0,4   0,5   0,6   0,7   0,8   0,9    1
 ```
 
-O espaço de estados/notas possíveis pode ser representado por um objeto tridimensional, considerando o valor máximo da escala e a quantidade de avaliadores independentes, onde cada dimensão representa as notas dadas por um avaliador. Assim, o domínio da escala do item 3 pode ser representado para cada dimensão (i.e., x, y e z) da seguinte forma:
+O espaço de estados/notas possíveis pode ser representado por um objeto tridimensional, considerando o valor máximo da escala e a quantidade de avaliadores independentes, onde cada dimensão representa as notas dadas por um avaliador. Assim, o domínio da escala do item 3 pode ser representado para cada dimensão (_i.e._, x, y e z) da seguinte forma:
 
 $$
 \text{D} = \{x \in \mathbb{R} : 0 \leq x \leq 1\}
@@ -90,9 +90,9 @@ rgl::rglwidget()
 
 A área total do espaço de estados abrange todas as possibilidades avaliativas, permitindo determinar, pela razão entre uma área específica desse espaço e o espaço total, a probabilidade de um evento em particular.
 
-Considerando a inexistência de tendências ou viéses avaliativo por parte dos avaliadores (__o que não reflete a realidade__), ou seja, considerando que as notas atribuídas por cada avaliador seguem uma distribuição uniforme de probabilidade, é viável determinar a probabilidade de um evento em que as avaliações dos três avaliadores ocorram dentro de uma área delimitada.
+Considerando a inexistência de tendências ou viéses avaliativos por parte dos avaliadores (__o que não reflete a realidade__), ou seja, considerando que as notas atribuídas por cada avaliador seguem uma distribuição uniforme de probabilidade, é viável determinar a probabilidade de um evento em que as avaliações dos três avaliadores ocorram dentro de uma área delimitada.
 
-Tomando o item 3 como exemplo, a probabilidade de os três avaliadores darem uma nota entre $0,15$ e $0,25$ (evento A) é equivalente a área de um cubo cujo de lado $0.25 - 0.15 = 0,1$ em razão do total de possibilidade do espaço de estados, _i.e._, da área de um cubo de lado $1$:
+Tomando o item 3 como exemplo, a probabilidade de os três avaliadores darem uma nota entre $0,15$ e $0,25$ (evento A) é equivalente a área de um cubo de lado $0.25 - 0.15 = 0,1$ em razão do total de possibilidade do espaço de estados, _i.e._, da área de um cubo de lado $1$:
 
 * Área do evento A: $0,1 \times 0,1 \times 0,1 = 0,001$
 * Área do espaço de estados: $1 \times 1 \times 1 = 1$
@@ -197,15 +197,13 @@ ggpubr::ggarrange(
 
 ### Teste de independência
 
-Considerando as FDPs mencionadas acima, é possível avaliar a probabilidade de um evento em que as notas dos três avaliadores estejam dentro de uma área específica do espaço de estados por meio de uma simulação de [Monte Carlo](https://pt.wikipedia.org/wiki/Método_de_Monte_Carlo).
-
-O objetivo desta simulação é realizar uma quantidade considerável de amostras aleatórias das FDPs e, consequentemente, verificar a probabilidade da ocorrência de um evento A no espaço de estados do problema [@stevens2023]. Em outras palavras, busca-se responder à seguinte pergunta: Qual é a probabilidade, obtida a partir de $10.000$ amostras aleatórias das FDPs de cada avaliador, de que as avaliações dos três avaliadores estejam dentro de um intervalo específico?
+Considerando as FDPs mencionadas acima, é possível avaliar a probabilidade de um evento em que as notas dos três avaliadores estejam dentro de uma área específica do espaço de estados por meio de uma simulação de [Monte Carlo](https://pt.wikipedia.org/wiki/Método_de_Monte_Carlo). O objetivo desta simulação é realizar uma quantidade considerável de amostras aleatórias das FDPs e, consequentemente, verificar a probabilidade da ocorrência de um evento A no espaço de estados do problema [@stevens2023]. Em outras palavras, busca-se responder à seguinte pergunta: Qual é a probabilidade, obtida a partir de $10.000$ amostras aleatórias das FDPs de cada avaliador, de que as avaliações dos três avaliadores estejam dentro de um intervalo específico?
 
 Ao obter respostas para essa pergunta em relação a cada item avaliado, torna-se viável testar a hipótese de independência avaliativa. Para isso, será considerado um nível de significância ($\alpha$) de $0,05$, o que significa que a hipótese alternativa será favorecida se a probabilidade de [erro tipo 1](https://en.wikipedia.org/wiki/Type_I_and_type_II_errors) ($\alpha$) for menor que $0,05$. Caso contrário, a hipótese nula será favorecida.
 
-## Exemplo de aplicação
+## Exemplo
 
-Considere novamente as avaliações do item 3 como exemplo. Para este caso, temos o vetor de notas $\{0,2; 0,2; 0,2\}$, atribuídas, respectivamente, pelos membros 1, 2 e 3 da subcomissão avaliadora. A área do evento a ser estado não pode ser nula, logo, nos casos em que todas as notas são iguais, será considerada uma área mínima com tamanho $0,1$ para cada dimensão, tendo como valor médio a média das notas atribuídas.
+Considere novamente as avaliações do item 3. Para este caso, temos o vetor de notas $\{0,2; 0,2; 0,2\}$, atribuídas, respectivamente, pelos membros 1, 2 e 3 da subcomissão avaliadora. A área do evento a ser estado não pode ser nula, logo, nos casos em que todas as notas são iguais, será considerada uma área mínima com tamanho $0,1$ para cada dimensão, tendo como valor médio a média das notas atribuídas.
 
 ```{r}
 ind_test <- function(n = 10000, 
@@ -327,6 +325,10 @@ Na visualização abaixo, os pontos azuis representam amostras fora da região d
 rgl::rglwidget()
 ``` 
 
+```{=html}
+<br>
+```
+
 Neste exemplo, observa-se que, a partir de `r inline_tex(test$n)` amostras aleatórias, seguindo o método exposto, a probabilidade de os três avaliadores darem uma nota entre `r inline_tex(test$int_begin, round_d = 5, nsmall = 0)` e `r inline_tex(test$int_end, round_d = 5, nsmall = 0)` foi de `r inline_tex(test$p_value, round_d = 5)`. Esse resultado será utilizado para o teste de hipótese a seguir:
 
 ```{r}
@@ -341,7 +343,7 @@ hyp_test(test$p_value)
 ## Item 1
 
 > * Descrição: Estado da arte do tema e problema de pesquisa; justificativa; relevância do projeto; referências atualizadas (pelo menos 50% nos últimos 5 anos) e pertinentes à temática.
-> * Valor máximo: 4.5
+> * Valor máximo: 4,5
 > * Notas atribuídas: 3,5; 3,5; 4
 
 ```{r}
