@@ -1,0 +1,509 @@
+```{r}
+#| label: setup
+#| include: false
+
+source(here::here("R", "utils.R"))
+
+set.seed(2023)
+```
+
+Este documento tem como objetivo testar a hipótese de independência das notas atribuídas ao projeto de Alícia Rafaelly Vilefort Sales no [processo seletivo de 2024](https://www.ppgenf.ufscar.br/pt-br/processo-seletivo/mestrado) para o curso “Mestrado Acadêmico em Ciências da Saúde” do Programa de Pós-Graduação em Enfermagem ([PPGEnf](https://www.ppgenf.ufscar.br)) da Universidade Federal de São Carlos ([UFSCar](https://www.ufscar.br/)). Esse processo é regulamentado pelo Edital aprovado pela Comissão de Pós-Graduação (CPGEnf) do PPGEnf-UFSCar durante sua 171ª Reunião Ordinária, realizada em 05/07/2023, juntamente com suas retificações, disponíveis no endereço eletrônico <https://www.ppgenf.ufscar.br/pt-br/processo-seletivo/mestrado>.
+
+A análise a seguir é totalmente reprodutível e foi realizada utilizando a linguagem de programação [R](https://www.r-project.org/). Para uma visualização mais completa, recomenda-se acessá-la pelo computador, utilizando o seguinte endereço: <https://danielvartan.github.io/ppgenf/>. O código-fonte pode ser encontrado em <https://github.com/danielvartan/ppgenf>.
+
+## Fatos
+
+A @tbl-grades apresenta as notas atribuídas ao projeto de pesquisa da Alícia no resultado preliminar do processo seletivo.
+
+::: {#tbl-grades}
+| Itens de avaliação | Valor | M1 | M2 | M3 | Média |
+|--------------------|-------|----|----|----|-------|
+| 1. Estado da arte do tema e problema de pesquisa; justificativa; relevância do projeto; referências atualizadas (pelo menos 50% nos últimos 5 anos) e pertinentes à temática | Até 4,5 pontos | 3,5 | 3,5 | 4,0 | 3,7 |
+| 2. Coerência entre objetivo(s) de pesquisa, problema de estudo/questão de investigação e delineamento metodológico. | Até 3,5 pontos | 2,5| 2,5 | 2,5 | 2,5 |
+| 3. Adequação do cronograma em termos de exequibilidade do projeto no tempo previsto à titulação. | Até 1,0 pontos | 0,2 | 0,2 | 0,2 | 0,2 |
+| 4. Qualidade da apresentação e expressão escrita (escrita de caráter científico, clara, com adequação às normas da língua portuguesa). | Até 1,0 pontos | 0,9 | 0,8 | 0,7 | 0,8 |
+| __Pontuação total__ | __10 pontos__ | __7,1__ | __7,0__ | __7,4__ | __7,2__ |
+
+<p style="text-align: center;">Fonte: PPGEnf-UFSCar. O documento do resultado preliminar pode ser conferido em: <https://drive.google.com/file/d/16fB_PNSSoeYuw9J1Nm2ZilhigZZ8WbiL/view?usp=sharing>.
+</p>
+
+Resultado preliminar da avaliação da análise do projeto de pesquisa de Alícia Rafaelly Vilefort Sales
+:::
+
+Segundo comunicado pela comissão do processo seletivo, a avaliação dos projetos ocorreu de forma cega, i.e., sem a identificação dos candidatatos.
+
+## Problema, pergunta e hipótese
+
+O fato de as notas entre os membros avaliadores serem muito próximas fez com que Alícia se questionasse a respeito da __possibilidade de não haver independência na avaliação entre os membros da subcomissão__. Esse é o problema que esta análise busca resolver.
+
+O problema pode ser abordado por meio da seguinte pergunta: __As avaliações dos membros da subcomisão podem ser consideradas indenpendentes?__
+
+A hipótese a ser testada/falseada é que as avaliações __não__ foram realizadas de maneira independente, conforme a seguinte esquematização:
+
+$$
+\begin{cases}
+\text{H}_{0}: \text{As avaliações são independentes} \\
+\text{H}_{a}: \text{As avaliações não são independentes}
+\end{cases}
+$$
+
+## Método
+
+O método de abordagem se encontra alinhado ao método hipotético-dedutivo proposto por @popper1979. O método de procedimento utilizado para avaliar a hipótese básica será o estatístico.
+
+Considerando o número reduzido de dados, o uso de um teste paramétrico de independência não seria estatisticamente válido. Por essa razão, propõe-se aqui a utilização de uma simulação de [Monte Carlo](https://pt.wikipedia.org/wiki/Método_de_Monte_Carlo). Este método fundamenta-se em amostragens aleatórias para a obtenção de resultados [@stevens2023], e sua lógica será detalhadamente explicada nas seções a seguir.
+
+### Espaço de estados
+
+É importante notar que as escalas utilizadas nas avaliações são quantitativas e contínuas. A título de exemplo, será utilizado aqui a escala e a avaliação do item 3, conforme apresentado na @tbl-grades.
+
+```
+ |-----|-----|-----|-----|-----|-----|-----|-----|-----|-----|
+ 0    0,1   0,2   0,3   0,4   0,5   0,6   0,7   0,8   0,9    1
+```
+
+O espaço de estados/notas possíveis pode ser representado por um objeto tridimensional, considerando o valor máximo da escala e a quantidade de avaliadores independentes, onde cada dimensão representa as notas dadas por um avaliador. Assim, o domínio da escala do item 3 pode ser representado para cada dimensão (i.e., x, y e z) da seguinte forma:
+
+$$
+\text{D} = \{x \in \mathbb{R} : 0 \leq x \leq 1\}
+$$
+
+Como a escala é a mesma para todos os avaliadores (M1, M2 e M3), o espaço de estados se configura como um cubo de lado igual ao valor máximo da escala em questão. Abaixo, é apresentada uma visualização desse espaço.
+
+```{r}
+upper <- 1
+
+x <- c(0, upper)
+y <- c(0, upper)
+z <- c(0, upper)
+col <- "black"
+
+rgl::plot3d(
+  x = x, y = y, z = z, col = col, type = "p",
+  xlab = "M1", ylab = "M2", zlab = "M3"
+)
+```
+
+```{r}
+rgl::rglwidget()
+```
+
+A área total do espaço de estados abrange todas as possibilidades avaliativas, permitindo determinar, pela razão entre uma área específica desse espaço e o espaço total, a probabilidade de um evento em particular.
+
+Considerando a inexistência de tendências ou viéses avaliativo por parte dos avaliadores (__o que não reflete a realidade__), ou seja, considerando que as notas atribuídas por cada avaliador seguem uma distribuição uniforme de probabilidade, é viável determinar a probabilidade de um evento em que as avaliações dos três avaliadores ocorram dentro de uma área delimitada.
+
+Tomando o item 3 como exemplo, a probabilidade de os três avaliadores darem uma nota entre $0,15$ e $0,25$ (evento A) é equivalente a área de um cubo cujo de lado $0.25 - 0.15 = 0,1$ em razão do total de possibilidade do espaço de estados, _i.e._, da área de um cubo de lado $1$:
+
+* Área do evento A: $0,1 \times 0,1 \times 0,1 = 0,001$
+* Área do espaço de estados: $1 \times 1 \times 1 = 1$
+* Probablidade do evento A: $\text{Área do evento A} / \text{Área do espaço de estados} = 0,001$
+
+Este exemplo é ilustrado abaixo. A área do evento A é representada pela cor vermelho-claro.
+
+```{r}
+upper <- 1
+side <- 0.1
+ct <- mean(c(0.15, 0.25))
+
+x <- c(0, upper)
+y <- c(0, upper)
+z <- c(0, upper)
+col <- "black"
+
+rgl::plot3d(
+  x = x, y = y, z = z, col = col, type = "p",
+  xlab = "M1", ylab = "M2", zlab = "M3"
+)
+
+c3d <- rgl::cube3d(color = "red", alpha = 0.1) |>
+  rgl::scale3d(side / 2, side / 2 , side / 2) |>
+  rgl::translate3d(ct, ct, ct)
+
+rgl::shade3d(c3d)
+```
+
+```{r}
+rgl::rglwidget()
+```
+
+### Funções de probabilidade
+
+Para este problema, não é adequado considerar que as avaliações dos membros da subcomissão sejam realizadas aleatoriamente, seguindo uma função de probabilidade uniforme para cada avaliador. Isso não reflete a realidade, pois espera-se que os avaliadores sejam especialistas em seus campos de atuação, o que sugere a presença de tendências e viéses próprios nas avaliações, além da independência no processo avaliativo. Portanto, a avaliação da probabilidade de um evento no qual as notas dos três avaliadores estejam contidas em uma determinada área do espaço de estados deve considerar uma função de probabilidade mais condizente com o problema.
+
+Propõe-se aqui que a função de densidade de probabilidade (FDP) para a pontuação de cada membro da subcomissão avaliadora seja distinta e siga uma distribuição sinusoidal enviesada (_i.e._, assimétrica), com média igual à média das notas atribuídas na avaliação do resultado preliminar. Essa suposição reconhece as variabilidades necessárias em uma avaliação independente, estabelecendo a média das três avaliações como a tendência central. O desvio padrão dessas distribuições é equivalente a $10\%$ do valor máximo da pontuação do item avaliado, enquanto a assimetria da distribuição de cada avaliador é determinada aleatoriamente.
+
+A figura abaixo apresenta quatro cenários dessas FDPs, considerando as avaliações do item 3.
+
+```{r}
+plot_prob <- function(n = 10000, 
+                      grades, 
+                      upper,
+                      alpha = sample(-2:2, 3),
+                      sd = upper * 0.1, 
+                      dist = 0) {
+  checkmate::assert_number(n, lower = 1)
+  checkmate::assert_numeric(grades, min.len = 1)
+  checkmate::assert_number(upper, lower = 0.001)
+  checkmate::assert_numeric(alpha, min.len = 1)
+  checkmate::assert_number(sd, lower = 0.001)
+  checkmate::assert_number(dist, lower = 0)
+  
+  if (length(alpha) == 1) alpha <- rep(alpha[1], 3)
+  ct <- mean(grades)
+  x_seq <- seq(from = 0, to = upper, length.out = n)
+
+  plot <- 
+    ggplot2::ggplot(
+      data = data.frame(u = x_seq), 
+      mapping = ggplot2::aes(x = u)
+    ) +
+    ggplot2::stat_function(
+      mapping = ggplot2::aes(colour = "M1"),
+      fun = sn::dsn,
+      args = list(xi = ct - dist, omega = sd, alpha = alpha[1])
+    ) + 
+    ggplot2::stat_function(
+      mapping = ggplot2::aes(colour = "M2"),
+      fun = sn::dsn,
+      args = list(xi = ct, omega = sd, alpha = alpha[2])
+    ) + 
+    ggplot2::stat_function(
+      mapping = ggplot2::aes(colour = "M3"),
+      fun = sn::dsn,
+      args = list(xi = ct + dist, omega = sd, alpha = alpha[3])
+    ) + 
+    ggplot2::scale_colour_manual(
+      name = NULL,
+      values = c("red", "blue", "green")
+    ) + 
+    ggplot2::labs(x = "Notas", y = "Densidade")
+
+  print(plot)
+}
+```
+
+```{r}
+grades <- c(0.2, 0.2, 0.2)
+upper = 1
+
+ggpubr::ggarrange(
+  plot_prob(grades = grades, upper = upper),
+  plot_prob(grades = grades, upper = upper),
+  plot_prob(grades = grades, upper = upper),
+  plot_prob(grades = grades, upper = upper),
+  ncol = 2, nrow = 2, common.legend = TRUE, legend = "top"
+)
+```
+
+### Teste de independência
+
+Considerando as FDPs mencionadas acima, é possível avaliar a probabilidade de um evento em que as notas dos três avaliadores estejam dentro de uma área específica do espaço de estados por meio de uma simulação de [Monte Carlo](https://pt.wikipedia.org/wiki/Método_de_Monte_Carlo).
+
+O objetivo desta simulação é realizar uma quantidade considerável de amostras aleatórias das FDPs e, consequentemente, verificar a probabilidade da ocorrência de um evento A no espaço de estados do problema [@stevens2023]. Em outras palavras, busca-se responder à seguinte pergunta: Qual é a probabilidade, obtida a partir de $10.000$ amostras aleatórias das FDPs de cada avaliador, de que as avaliações dos três avaliadores estejam dentro de um intervalo específico?
+
+Ao obter respostas para essa pergunta em relação a cada item avaliado, torna-se viável testar a hipótese de independência avaliativa. Para isso, será considerado um nível de significância ($\alpha$) de $0,05$, o que significa que a hipótese alternativa será favorecida se a probabilidade de [erro tipo 1](https://en.wikipedia.org/wiki/Type_I_and_type_II_errors) ($\alpha$) for menor que $0,05$. Caso contrário, a hipótese nula será favorecida.
+
+## Exemplo de aplicação
+
+Considere novamente as avaliações do item 3 como exemplo. Para este caso, temos o vetor de notas $\{0,2; 0,2; 0,2\}$, atribuídas, respectivamente, pelos membros 1, 2 e 3 da subcomissão avaliadora. A área do evento a ser estado não pode ser nula, logo, nos casos em que todas as notas são iguais, será considerada uma área mínima com tamanho $0,1$ para cada dimensão, tendo como valor médio a média das notas atribuídas.
+
+```{r}
+ind_test <- function(n = 10000, 
+                     grades,
+                     upper,
+                     alpha = sample(-2:2, 3),
+                     sd = upper * 0.1,
+                     dist = 0,
+                     min_side = 0.1,
+                     plot = TRUE) {
+  checkmate::assert_number(n, lower = 1)
+  checkmate::assert_numeric(grades, min.len = 1)
+  checkmate::assert_number(upper, lower = 0.001)
+  checkmate::assert_numeric(alpha, min.len = 3)
+  checkmate::assert_number(sd, lower = 0.001)
+  checkmate::assert_number(dist, lower = 0)
+  checkmate::assert_number(min_side, lower = 0)
+  checkmate::assert_flag(plot)
+  
+  if (length(alpha) == 1) alpha <- rep(alpha[1], 3)
+  
+  ct <- mean(grades)
+  
+  if ((max(grades) - min(grades)) < min_side) {
+    int_begin <- min(grades) - (min_side / 2)
+    int_end <- max(grades) + (min_side / 2)
+  } else {
+    int_begin <- min(grades)
+    int_end <- max(grades)
+  }
+  
+  side <- int_end - int_begin
+  
+  x = numeric()
+  y = numeric()
+  z = numeric()
+  col = character()
+  
+  for (i in seq_len(n)) {
+    x_i <- sn::rsn(xi = ct - dist, omega = sd, alpha = alpha[1])
+    y_i <- sn::rsn(xi = ct , omega = sd, alpha = alpha[2])
+    z_i <- sn::rsn(xi = ct + dist , omega = sd, alpha = alpha[3])
+    
+    while(any(c(x_i, y_i, z_i) < 0) | any(c(x_i, y_i, z_i) > upper)) {
+      x_i <- sn::rsn(xi = ct - dist, omega = sd, alpha = alpha[1])
+      y_i <- sn::rsn(xi = ct , omega = sd, alpha = alpha[2])
+      z_i <- sn::rsn(xi = ct + dist , omega = sd, alpha = alpha[3])
+    }
+    
+    if (x_i >= int_begin && x_i <= int_end &&
+        y_i >= int_begin && y_i <= int_end &&
+        z_i >= int_begin && z_i <= int_end) {
+      col_i <- "red"
+    } else {
+      col_i <- "blue"
+    }
+    
+    x <- x |> append(x_i)
+    y <- y |> append(y_i)
+    z <- z |> append(z_i)
+    col <- col |> append(col_i)
+  }
+  
+  p_value <- length(which(col == "red")) / n
+  
+  if (isTRUE(plot)) {
+    x <- x |> append(c(0, upper))
+    y <- y |> append(c(0, upper))
+    z <- z |> append(c(0, upper))
+    col <- col |> append("black")
+    
+    rgl::plot3d(
+      x = x, y = y, z = z, col = col, type = "p",
+      xlab = "M1", ylab = "M2", zlab = "M3"
+    )
+    
+    # c3d <- rgl::cube3d(color = "blue", alpha = 0.1)
+    # c3d$vb[c3d$vb == -1] <- 0
+    # c3d$vb[c3d$vb == 1] <- upper
+    # rgl::shade3d(c3d)
+    
+    c3d <- rgl::cube3d(color = "red", alpha = 0.1) |>
+      rgl::scale3d(side / 2, side / 2 , side / 2) |>
+      rgl::translate3d(ct, ct, ct)
+    rgl::shade3d(c3d) 
+  }
+  
+  list(
+    n = n, x = x, y = y, z = z, int_begin = int_begin, int_end = int_end,
+    side = side, p_value = p_value
+  )
+}
+```
+
+Vejamos primeiro as Funções de Densidade de Probabilidade (FDPs) de cada avaliador:
+
+```{r}
+n <- 10000
+grades <- c(0.2, 0.2, 0.2)
+upper <- 1
+alpha <- sample(-2:2, 3)
+```
+
+```{r}
+plot_prob(n, grades, upper, alpha)
+```
+
+Aplica-se então a simulação de Monte Carlo conforme descrito anteriormente.
+
+```{r}
+test <- ind_test(n, grades, upper, alpha)
+```
+
+Na visualização abaixo, os pontos azuis representam amostras fora da região do evento analisado no espaço de estados. Já os pontos vermelhos indicam amostras contidas nessa região, destacada com a cor vermelho-claro.
+
+> Caso esteja visualizando essa análise pelo computador, utilize a roda do mouse para dar zoom no gráfico abaixo.
+
+```{r}
+rgl::rglwidget()
+``` 
+
+Neste exemplo, observa-se que, a partir de `r inline_tex(test$n)` amostras aleatórias, seguindo o método exposto, a probabilidade de os três avaliadores darem uma nota entre `r inline_tex(test$int_begin, round_d = 5, nsmall = 0)` e `r inline_tex(test$int_end, round_d = 5, nsmall = 0)` foi de `r inline_tex(test$p_value, round_d = 5)`. Esse resultado será utilizado para o teste de hipótese a seguir:
+
+```{r}
+#| echo: false
+#| output: asis
+
+hyp_test(test$p_value)
+```
+
+## Resultados
+
+## Item 1
+
+> * Descrição: Estado da arte do tema e problema de pesquisa; justificativa; relevância do projeto; referências atualizadas (pelo menos 50% nos últimos 5 anos) e pertinentes à temática.
+> * Valor máximo: 4.5
+> * Notas atribuídas: 3,5; 3,5; 4
+
+```{r}
+n <- 10000
+grades <- c(3.5, 3.5, 4)
+upper <- 4.5
+alpha <- sample(-2:2, 3)
+```
+
+As Funções de Densidade de Probabilidade (FDPs) de cada membro avaliador (Mx) podem ser observadas abaixo.
+
+```{r}
+plot_prob(n, grades, upper, alpha)
+```
+
+```{r}
+test <- ind_test(n, grades, upper, alpha)
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+p_value_exp(n, test$int_begin, test$int_end, test$p_value)
+```
+
+```{r}
+rgl::rglwidget()
+``` 
+
+```{r}
+#| echo: false
+#| output: asis
+
+hyp_test(test$p_value)
+```
+
+## Item 2
+
+> * Descrição: Coerência entre objetivo(s) de pesquisa, problema de estudo/questão de investigação e delineamento metodológico.
+> * Valor máximo: 3,5
+> * Notas atribuídas: 2,5; 2,5; 2,5
+
+```{r}
+n <- 10000
+grades <- c(2.5, 2.5, 2.5)
+upper <- 3.5
+alpha <- sample(-2:2, 3)
+```
+
+As Funções de Densidade de Probabilidade (FDPs) de cada membro avaliador (Mx) podem ser observadas abaixo.
+
+```{r}
+plot_prob(n, grades, upper, alpha)
+```
+
+```{r}
+test <- ind_test(n, grades, upper, alpha)
+```
+
+
+```{r}
+#| echo: false
+#| output: asis
+
+p_value_exp(n, test$int_begin, test$int_end, test$p_value)
+```
+
+```{r}
+rgl::rglwidget()
+``` 
+
+```{r}
+#| echo: false
+#| output: asis
+
+hyp_test(test$p_value)
+```
+
+## Item 3
+
+> * Descrição: Adequação do cronograma em termos de exequibilidade do projeto no tempo previsto à titulação.
+> * Valor máximo: 1
+> * Notas atribuídas: 0,2; 0,2; 0,2
+
+```{r}
+n <- 10000
+grades <- c(0.2, 0.2, 0.2)
+upper <- 1
+alpha <- sample(-2:2, 3)
+```
+
+As Funções de Densidade de Probabilidade (FDPs) de cada membro avaliador (Mx) podem ser observadas abaixo.
+
+```{r}
+plot_prob(n, grades, upper, alpha)
+```
+
+```{r}
+test <- ind_test(n, grades, upper, alpha)
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+p_value_exp(n, test$int_begin, test$int_end, test$p_value)
+```
+
+```{r}
+rgl::rglwidget()
+``` 
+
+```{r}
+#| echo: false
+#| output: asis
+
+hyp_test(test$p_value)
+```
+
+## Item 4
+
+> * Descrição: Qualidade da apresentação e expressão escrita (escrita de caráter científico, clara, com adequação às normas da língua portuguesa).
+> * Valor máximo: 1
+> * Notas atribuídas: 0,9; 0,8; 0,7
+
+```{r}
+n <- 10000
+grades <- c(0.9, 0.8, 0.7)
+upper <- 1
+alpha <- sample(-2:2, 3)
+```
+
+As Funções de Densidade de Probabilidade (FDPs) de cada membro avaliador (Mx) podem ser observadas abaixo.
+
+```{r}
+plot_prob(n, grades, upper, alpha)
+```
+
+```{r}
+test <- ind_test(n, grades, upper, alpha)
+```
+
+```{r}
+#| echo: false
+#| output: asis
+
+p_value_exp(n, test$int_begin, test$int_end, test$p_value)
+```
+
+```{r}
+rgl::rglwidget()
+``` 
+
+```{r}
+#| echo: false
+#| output: asis
+
+hyp_test(test$p_value)
+``` 
+
+## Referências
+
+::: {#refs}
+:::

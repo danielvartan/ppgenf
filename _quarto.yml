@@ -1,0 +1,30 @@
+editor: source
+
+execute:
+  cache: false
+  freeze: auto
+
+project:
+  type: website
+  output-dir: docs
+  pre-render: "R/quarto-pre-render.R"
+
+title: "Teste de independência"
+author: "Daniel Vartanian e Alícia Sales"
+date: today
+url: https://danielvartan.github.io/ppgenf/
+site-url: https://danielvartan.github.io/ppgenf/
+repo-url: https://github.com/danielvartan/ppgenf/
+issue-url: https://github.com/danielvartan/ppgenf/issues/
+repo-branch: main
+
+format:
+  html:
+    cap-location: top
+    code-fold: true
+    csl: english-apa-author-date.csl
+    lang: pt-br
+    language: _language.yml
+    theme: default
+
+bibliography: references.bib
